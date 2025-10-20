@@ -33,7 +33,7 @@ const screenData = [
                 <li>Use <strong>Bernoulli's Principle</strong> to explain slamming doors and rattling windows.</li>
             </ul>
         `,
-        type: "info"
+        type: "info" // This will now auto-enable the 'Next' button
     },
     {
         title: "The Case File: 13 Blackwood Manor",
@@ -44,7 +44,7 @@ const screenData = [
             </div>
             <p style="text-align:center; margin-top:10px;"><em>Video shows: a door creaking, an investigator noting a "cold spot," and a door slamming.</em></p>
         `,
-        type: "info"
+        type: "info" // This will now auto-enable the 'Next' button
     },
     {
         title: "Key Term: Paranormal",
@@ -65,7 +65,7 @@ const screenData = [
             <p>Investigators claim spirits 'drain heat energy' from the air to manifest, causing cold spots.</p>
             <p>This claim goes against the fundamental laws of energy, a topic called <strong>Thermodynamics</strong>.</p>
         `,
-        type: "info"
+        type: "info" // This will now auto-enable the 'Next' button
     },
     {
         title: "Physics Law: The First Law of Thermodynamics",
@@ -130,7 +130,7 @@ const screenData = [
         content: `
             <p>The house groans and creaks at night. Is it a restless spirit, or can we explain it with <strong>Material Science</strong> - the study of how materials behave under pressure?</p>
         `,
-        type: "info"
+        type: "info" // This will now auto-enable the 'Next' button
     },
     {
         title: "Material Properties: Stress and Strain",
@@ -215,7 +215,7 @@ const screenData = [
         content: `
             <p>A door slams shut in an empty hallway. An invisible force? Or <strong>Bernoulli's Principle</strong>, a key rule of how fluids (like air) move.</p>
         `,
-        type: "info"
+        type: "info" // This will now auto-enable the 'Next' button
     },
     {
         title: "Physics Law: Bernoulli's Principle",
@@ -269,7 +269,7 @@ const screenData = [
             <p>Science can explain many things that seem mysterious at first!</p>
             <button class="start-btn" onclick="goNext()">See Your Score</button>
         `,
-        type: "info"
+        type: "info" // This will now auto-enable the 'Next' button
     },
     {
         title: "Your Final Score",
@@ -325,6 +325,13 @@ function renderScreen() {
     // Update the title and content
     screenTitle.innerHTML = screen.title;
     screenContent.innerHTML = screen.content;
+
+    // *** THIS IS THE FIX ***
+    // If the screen is just for info, mark it 'completed' so 'Next' is enabled
+    if (screen.type === 'info') {
+        screenStates[currentScreen].completed = true; 
+    }
+    // *** END OF FIX ***
 
     // Set up interactivity based on the screen type
     const feedback = document.getElementById('feedback');
@@ -465,9 +472,33 @@ function setupDropdownCheck(feedback, points) {
         } else {
             feedback.textContent = "One or more answers are incorrect. Try again.";
             feedback.className = "feedback incorrect";
+
+            // Reset score if they were wrong after being right
+            if (screenStates[currentScreen].completed) {
+                screenStates[currentScreen].score = 0;
+                updateTotalScore();
+            }
+            screenStates[currentScreen].completed = false;
+            nextBtn.disabled = true;
         }
     });
+
+    // Add listener to reset if they change their answer
+    selects.forEach(select => {
+        select.addEventListener('change', () => {
+             if (screenStates[currentScreen].completed) {
+                feedback.textContent = "Your answer has changed. Please check again.";
+                feedback.className = "feedback";
+                checkBtn.disabled = false;
+                nextBtn.disabled = true;
+                screenStates[currentScreen].completed = false;
+                screenStates[currentScreen].score = 0;
+                updateTotalScore();
+             }
+        });
+    });
 }
+
 
 /**
  * Renders the final score screen
